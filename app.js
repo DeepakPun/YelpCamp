@@ -4,6 +4,8 @@ import { fileURLToPath } from "url"
 import mongoose from "mongoose"
 import Campground from "./models/campground.js"
 import methodOverride from "method-override"
+import morgan from "morgan"
+import ejsMate from "ejs-mate"
 
 mongoose.connect("mongodb://localhost:27017/yelp-camp")
 
@@ -18,10 +20,20 @@ const app = express()
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 app.set("view engine", "ejs")
+app.engine("ejs", ejsMate)
 app.set("views", path.join(__dirname, "views"))
 app.use(express.urlencoded({ extended: true }))
 app.use(express.json())
 app.use(methodOverride("_method"))
+
+app.use((req, res, next) => {
+  if (req.url.includes(".well-known")) {
+    return res.status(204).end()
+  }
+  next()
+})
+
+app.use(morgan("dev"))
 
 app.get("/", (req, res) => {
   res.render("home")
@@ -74,3 +86,6 @@ const PORT = process.env.PORT || 3000
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`)
 })
+
+// Unsplash image url
+// https://images.unsplash.com/photo-1504280390367-361c6d9f38f4?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8Y2FtcGdyb3VuZHxlbnwwfHwwfHx8MA%3D%3D
