@@ -2,7 +2,7 @@
 
 A full-stack campground review app built as part of Colt Steele's Web Developer Bootcamp. Users can browse, create, review, and geolocate campgrounds.
 
-**Live Demo:** [your-render-link.onrender.com](https://your-render-link.onrender.com) _(replace after deploy)_
+<!-- **Live Demo:** [your-render-link.onrender.com](https://your-render-link.onrender.com) -->
 
 [YelpCamp Banner](https://res.cloudinary.com/demo/image/upload/v1/yelpcamp-banner.png)
 
