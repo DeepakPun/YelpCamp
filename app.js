@@ -1,3 +1,5 @@
+import dotenv from "dotenv"
+dotenv.config({ path: ".env.local" })
 import express from "express"
 import path from "path"
 import { fileURLToPath } from "url"
@@ -7,9 +9,13 @@ import morgan from "morgan"
 import ejsMate from "ejs-mate"
 import ExpressError from "./utils/ExpressError.js"
 import campgroundRoutes from "./routes/campgrounds.js"
+import userRoutes from "./routes/users.js"
 import reviewRoutes from "./routes/reviews.js"
 import session from "express-session"
 import flash from "connect-flash"
+import passport from "passport"
+import LocalStrategy from "passport-local"
+import User from "./models/user.js"
 
 mongoose.connect("mongodb://localhost:27017/yelp-camp")
 
@@ -44,11 +50,6 @@ const sessionConfig = {
 
 app.use(session(sessionConfig))
 app.use(flash())
-app.use((req, res, next) => {
-  res.locals.success = req.flash("success")
-  res.locals.error = req.flash("error")
-  next()
-})
 
 app.use((req, res, next) => {
   if (req.url.includes(".well-known")) {
@@ -59,8 +60,22 @@ app.use((req, res, next) => {
 
 app.use(morgan("dev"))
 
-app.use("/campgrounds", campgroundRoutes)
+app.use(passport.initialize())
+app.use(passport.session())
+passport.use(new LocalStrategy(User.authenticate()))
+passport.serializeUser(User.serializeUser())
+passport.deserializeUser(User.deserializeUser())
+
+app.use((req, res, next) => {
+  res.locals.currentUser = req.user
+  res.locals.success = req.flash("success")
+  res.locals.error = req.flash("error")
+  next()
+})
+
+app.use("/", userRoutes)
 app.use("/campgrounds/:campgroundId/reviews", reviewRoutes)
+app.use("/campgrounds", campgroundRoutes)
 
 app.get("/", (req, res) => {
   res.render("home")
