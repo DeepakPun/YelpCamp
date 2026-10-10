@@ -4,20 +4,13 @@
         <div class="col-6 offset-3">
             <h1 class="">Edit campground</h1>
             <form action="/campgrounds/<%= campground._id %>?_method=PUT" method="POST" novalidate
-                class="needs-validation">
+                class="needs-validation" enctype="multipart/form-data">
                 <div class="mb-3">
                     <label class="form-label mb-0" for="title">Title:</label>
                     <input type="text" name="campground[title]" id="title" class="form-control"
                         value="<%= campground.title %>" required>
                     <div class="valid-feedback">Looks good!</div>
                     <div class="invalid-feedback">Please enter a title for the campground.</div>
-                </div>
-                <div class="mb-3">
-                    <label class="form-label mb-0" for="image">Image URL:</label>
-                    <input type="text" name="campground[image]" id="image" class="form-control"
-                        value="<%= campground.image %>" required>
-                    <div class="valid-feedback">Looks good!</div>
-                    <div class="invalid-feedback">Please enter an image URL for the campground.</div>
                 </div>
                 <div class="mb-3">
                     <label class="form-label mb-0" for="price">Price</label>
@@ -37,16 +30,86 @@
                     <div class="invalid-feedback">Please enter a location for the campground.</div>
                 </div>
                 <div class="mb-3">
+                    <label for="images" class="form-label mb-0">Add More Images</label>
+                    <input class="form-control" type="file" id="images" name="images" multiple>
+                    <div id="file-names" class="form-text text-muted"></div>
+                </div>
+                <div class="mb-3">
                     <label class="form-label mb-0" for="description">Description:</label>
                     <textarea name="campground[description]" id="description" cols="30" rows="10" class="form-control"
                         required><%= campground.description %></textarea>
                     <div class="valid-feedback">Looks good!</div>
                     <div class="invalid-feedback">Please enter a description for the campground.</div>
                 </div>
+                <!-- Display list of images and allow deletion to auth user -->
+                <div class="mb-4">
+                    <label class="form-label fw-bold">Current Images</label>
+
+                    <% if(campground.images.length===1) { %>
+                        <div class="alert alert-warning py-2 px-3 small mb-2">
+                            Only one image left - you must upload a new image before you can delete this one.
+                        </div>
+                        <% } %>
+
+                            <div class="row g-3">
+                                <% campground.images.forEach(function(img, i){ %>
+                                    <div class="col-6 col-md-4">
+                                        <div class="card shadow-sm border-0 h-100">
+                                            <img src="<%= img.thumbnail %>" class="card-img-top"
+                                                style="height: 150px; object-fit: cover;" alt="">
+                                            <div class="card-footer bg-white p-2 text-center">
+                                                <div
+                                                    class="form-check d-flex justify-content-center align-items-center gap-2 m-0">
+                                                    <input class="form-check-input delete-checkbox" type="checkbox"
+                                                        id="image-<%= i %>" name="deleteImages[]"
+                                                        value="<%= img.filename %>" <%=campground.images.length===1
+                                                        ? 'disabled' : '' %> >
+                                                    <label
+                                                        class="form-check-label small <%= campground.images.length === 1 ? 'text-muted' : '' %>"
+                                                        for="image-<%= i %>">
+                                                        Delete
+                                                    </label>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <% }) %>
+                            </div>
+                </div>
                 <div class="my-3">
                     <button type="submit" class="btn btn-info">Update Campground</button>
                 </div>
             </form>
-            <a href="/campgrounds/<%= campground._id %>" class="btn btn-secondary">Back to campground</a>
+            <a href="/campgrounds/<%= campground._id %>" class="btn btn-secondary mb-2">Back to campground</a>
         </div>
     </div>
+
+    <script>
+        const deleteCheckboxes = document.querySelectorAll('.delete-checkbox:not(:disabled)');
+        const imageInput = document.getElementById('images');
+        const totalImages = <%= campground?.images?.length %>;
+
+        function checkIfLastImage() {
+            const checkedCount = document.querySelectorAll('.delete-checkbox:checked').length;
+            const newFilesCount = imageInput.files.length;
+
+            if (checkedCount === totalImages && newFilesCount === 0) {
+                return false;
+            }
+            return true;
+        }
+
+        deleteCheckboxes.forEach(cb => {
+            cb.addEventListener('change', function () {
+                if (!checkIfLastImage()) {
+                    alert("A campground must have at least one image. Upload new images first if you want to delete all current ones.");
+                    this.checked = false;
+                }
+            });
+        });
+
+        imageInput.addEventListener('change', function (e) {
+            const files = Array.from(e.target.files);
+            document.getElementById('file-names').textContent = files.length ? `${files.length} new: ${files.map(f => f.name).join(', ')}` : '';
+        });
+    </script>

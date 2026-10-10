@@ -1,26 +1,31 @@
 <% layout('layouts/boilerplate') -%>
-  <h1>Register</h1>
-  <form action="/register" class="needs-validation" novalidate method="post">
-    <div class="mb-3">
-      <label for="username" class="form-label mb-0">Username</label>
-      <input type="text" class="form-control" id="username" name="username" required>
-      <div class="invalid-feedback">
-        Please provide a username.
+  <div class="row">
+    <div class="col-md-6 offset-md-3 col-xl-4 offset-xl-4">
+      <div class="card shadow">
+        <div class="card-body">
+          <h5 class="card-title">Register</h5>
+          <form action="/register" class="needs-validation" novalidate method="post">
+            <div class="mb-3">
+              <label for="username" class="form-label mb-0">Username</label>
+              <input type="text" class="form-control" id="username" name="username" required autofocus>
+              <div class="invalid-feedback">Please provide a username.</div>
+            </div>
+            <div class="mb-3">
+              <label for="email" class="form-label mb-0">Email</label>
+              <input type="email" class="form-control" id="email" name="email" required>
+              <div class="invalid-feedback">Please provide a valid email.</div>
+            </div>
+            <div class="mb-3">
+              <label for="password" class="form-label mb-0">Password</label>
+              <input type="password" class="form-control" id="password" name="password" required>
+              <div class="invalid-feedback">Please provide a password.</div>
+            </div>
+            <button class="btn btn-success w-100">Register</button>
+          </form>
+          <div class="mt-3">
+            <small>Already have an account? <a href="/login">Login</a></small>
+          </div>
+        </div>
       </div>
     </div>
-    <div class="mb-3">
-      <label for="email" class="form-label mb-0">Email</label>
-      <input type="email" class="form-control" id="email" name="email" required>
-      <div class="invalid-feedback">
-        Please provide a valid email address.
-      </div>
-    </div>
-    <div class="mb-3">
-      <label for="password" class="form-label mb-0">Password</label>
-      <input type="password" class="form-control" id="password" name="password" required>
-      <div class="invalid-feedback">
-        Please provide a password.
-      </div>
-    </div>
-    <button class="btn btn-success" type="submit">Register</button>
-  </form>
+  </div>

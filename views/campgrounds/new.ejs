@@ -3,18 +3,12 @@
     <div class="row">
         <div class="col-6 offset-3">
             <h1 class="">Create a new campground</h1>
-            <form action="/campgrounds" method="POST" novalidate class="needs-validation">
+            <form action="/campgrounds" method="POST" novalidate class="needs-validation" enctype="multipart/form-data">
                 <div class="mb-3">
                     <label class="form-label mb-0" for="title">Title:</label>
                     <input type="text" name="campground[title]" id="title" class="form-control mb-0" required>
                     <div class="valid-feedback">Looks good!</div>
                     <div class="invalid-feedback">Please enter a title for the campground.</div>
-                </div>
-                <div class="mb-3">
-                    <label class="form-label mb-0" for="image">Image URL:</label>
-                    <input type="text" name="campground[image]" id="image" class="form-control" required>
-                    <div class="valid-feedback">Looks good!</div>
-                    <div class="invalid-feedback">Please enter an image URL for the campground.</div>
                 </div>
                 <div class="mb-3">
                     <label class="form-label mb-0" for="price">Price</label>
@@ -32,6 +26,18 @@
                     <div class="valid-feedback">Looks good!</div>
                     <div class="invalid-feedback">Please enter a location for the campground.</div>
                 </div>
+                <div class="mb-3">
+                    <label for="images" class="form-label mb-0">Select Images</label>
+                    <input class="form-control" type="file" id="images" name="images" multiple>
+                    <div id="file-names" class="form-text text-muted"></div>
+                </div>
+                <!-- <input type="file" name="image" id="image" multiple> -->
+                <!-- <div class="mb-3">
+                                    <label class="form-label mb-0" for="image">Image URL:</label>
+                                    <input type="text" name="campground[image]" id="image" class="form-control" required>
+                                    <div class="valid-feedback">Looks good!</div>
+                                    <div class="invalid-feedback">Please enter an image URL for the campground.</div>
+                                </div> -->
                 <div class="mb-3">
                     <label class="form-label mb-0" for="description">Description:</label>
                     <textarea name="campground[description]" id="description" cols="30" rows="10" class="form-control"

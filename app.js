@@ -1,5 +1,4 @@
-import dotenv from "dotenv"
-dotenv.config({ path: ".env.local" })
+import "./env.js"
 import express from "express"
 import path from "path"
 import { fileURLToPath } from "url"
@@ -38,7 +37,7 @@ app.use(methodOverride("_method"))
 app.use(express.static(path.join(__dirname, "public")))
 
 const sessionConfig = {
-  secret: "thisshouldbeabettersecret!",
+  secret: process.env.SESSION_SECRET,
   resave: false,
   saveUninitialized: false,
   cookie: {
@@ -94,9 +93,16 @@ app.use((err, req, res, next) => {
 const PORT = process.env.PORT || 3000
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`)
+  if (process.env.NODE_ENV !== "production")
+    console.log(`Running in ${process.env.NODE_ENV} mode`)
 })
 
 // Unsplash image url
 // https://images.unsplash.com/photo-1504280390367-361c6d9f38f4?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8Y2FtcGdyb3VuZHxlbnwwfHwwfHx8MA%3D%3D
 // app.all('/{*path}', (req, res, next) => {}
 //  _id: {id: false},
+// npm install cloudinary@1.41.3
+
+// npm install multer-storage-cloudinary@4.0.0
+
+// npm install multer@1.4.5-lts.1

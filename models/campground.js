@@ -1,10 +1,20 @@
 import mongoose from "mongoose"
 const Schema = mongoose.Schema
 import Review from "./review.js"
+import { cloudinary } from "../cloudinary/index.js"
+
+const ImageSchema = new Schema({
+  url: String,
+  filename: String,
+})
+
+ImageSchema.virtual("thumbnail").get(function () {
+  return this.url.replace("/upload", "/upload/w_200")
+})
 
 const campgroundSchema = new Schema({
   title: String,
-  image: String,
+  images: [ImageSchema],
   price: Number,
   description: String,
   location: String,
@@ -27,6 +37,10 @@ campgroundSchema.post("findOneAndDelete", async function (doc) {
         $in: doc.reviews,
       },
     })
+
+    for (let image of doc.images) {
+      await cloudinary.uploader.destroy(image.filename)
+    }
   }
 })
 

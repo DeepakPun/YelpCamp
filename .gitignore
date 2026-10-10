@@ -48,3 +48,5 @@ public/uploads/
 # The catch async utility is not needed in express 5.0 and above. 
 # kept her for ref and backward compatibility.
 CatchAsync.js
+
+testFile.ejs
