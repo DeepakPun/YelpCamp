@@ -1,11 +1,13 @@
 <% layout('layouts/boilerplate') %>
+    <div id="cluster-map" style="width: 100%; height: 500px; border-radius: 7px;"></div>
 
     <h1>All Campgrounds</h1>
     <% for(let campground of campgrounds) { %>
         <div class="card mb-3">
             <div class="row">
                 <div class="col-md-4">
-                    <img src="<%= campground.images[0].url %>" alt="<%= campground.title %>" class="img-fluid">
+                    <img class="img-fluid w-100 h-100" src="<%= campground.images[0].url %>"
+                        alt="<%= campground.title %>">
                 </div>
                 <div class="col-md-8">
                     <div class="card-body">
@@ -28,3 +30,19 @@
             </div>
         </div>
         <% } %>
+
+            <%- "<script>" %>
+                const maptilerApiKey = "<%- process.env.MAPTILER_API_KEY %>";
+                    const campgrounds = {
+                    type: "FeatureCollection",
+                    features: <%- JSON.stringify( campgrounds.map(campground=> ({
+                        type: "Feature",
+                        geometry: campground.geometry,
+                        properties: { popUpMarkup: campground?.properties?.popUpMarkup }
+                        }))
+                        ) %>
+                        };
+                        <%- "</script>" %>
+
+                            <script src="/javascripts/clusterMap.js"></script>
+                            <script defer src="/javascripts/clusterMap.js"></script>

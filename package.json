@@ -10,6 +10,7 @@
   "keywords": [],
   "type": "module",
   "dependencies": {
+    "@maptiler/client": "^2.5.0",
     "cloudinary": "^1.41.0",
     "connect-flash": "^0.1.1",
     "dotenv": "^18.0.5",

@@ -1,5 +1,14 @@
 import Campground from "../models/campground.js"
 import { cloudinary } from "../cloudinary/index.js"
+import * as maptilerClient from "@maptiler/client"
+
+maptilerClient.config.apiKey = process.env.MAPTILER_API_KEY
+maptilerClient.config.fetch = fetch
+
+async function findCoordinates() {
+  const geoData = await maptilerClient.geocoding.forward("Los Angeles")
+  console.log("Coordinates: ", geoData.features[0].geometry.coordinates)
+}
 
 const getAllCampgrounds = async (req, res) => {
   const campgrounds = await Campground.find({})
@@ -23,7 +32,38 @@ const viewSingleCamp = async (req, res) => {
 }
 
 const createCampground = async (req, res) => {
+  const query = req.body.campground.location?.trim()
+
+  if (!query || query.length < 3) {
+    req.flash("error", "Please enter a real location")
+    return res.redirect("/campgrounds/new")
+  }
+
+  const geoData = await maptilerClient.geocoding.forward(query, {
+    limit: 1,
+    autocomplete: false,
+  })
+
+  console.log("GeoData:", geoData.features[0])
+
+  if (!geoData.features?.length) {
+    req.flash("error", "Could not geocode that location. Please try again.")
+    return res.redirect("/campgrounds/new")
+  }
+
+  const feature = geoData.features[0]
+
+  if (feature.relevance !== undefined && feature.relevance < 0.6) {
+    req.flash(
+      "error",
+      `Could not find "${req.query}". Try a city address like "Yosemite National Park"`,
+    )
+    return res.redirect("/campgrounds/new")
+  }
+
   const campground = new Campground(req.body.campground)
+  campground.geometry = feature.geometry
+  campground.location = feature.place_name
   campground.images = req.files.map((f) => ({
     url: f.path,
     filename: f.filename,
@@ -47,34 +87,45 @@ const renderEditForm = async (req, res) => {
 
 const updateCampground = async (req, res) => {
   const { campgroundId } = req.params
+
+  const query = req.body.campground.location?.trim()
+
   const campground = await Campground.findById(campgroundId)
+
   if (!campground) {
     req.flash("error", "Campground not found")
     return res.redirect("/campgrounds")
   }
 
-  await Campground.findByIdAndUpdate(
-    campgroundId,
-    { ...req.body.campground },
-    { returnDocument: "after" },
-  )
+  if (query && query !== campground.location) {
+    const geoData = await maptilerClient.geocoding.forward(query, {
+      limit: 1,
+      autocomplete: false,
+    })
 
-  const newImages = req.files.map((f) => ({
-    url: f.path,
-    filename: f.filename,
-  }))
+    if (!geoData.features?.length || geoData.features[0].relevance < 0.6) {
+      req.flash(
+        "error",
+        `Could not find "${query}" - it might be Asda, Djibouti again`,
+      )
+      return res.redirect(`/campgrounds/${campgroundId}/edit`)
+    }
 
-  campground.images.push(...newImages)
+    campground.geometry = geoData.features[0].geometry
+    campground.location = geoData.features[0].place_name
+  }
 
-  if (
-    req.body.deleteImages &&
-    req.body.deleteImages.length === campground.images.length &&
-    !req.files.length
-  ) {
-    req.flash(
-      "error",
-      "You cannot delete all images, campground must have at least one image",
-    )
+  campground.set({
+    ...req.body.campground,
+    location: campground.location,
+    geometry: campground.geometry,
+  })
+
+  const hasNewImages = req.files && req.files.length > 0
+  const deleteCount = req.body.deleteImages?.length || 0
+
+  if (deleteCount === campground.images.length && !hasNewImages) {
+    req.flash("error", "You cannot delete all images, must have at least one")
     return res.redirect(`/campgrounds/${campground._id}/edit`)
   }
 
@@ -83,15 +134,15 @@ const updateCampground = async (req, res) => {
       await cloudinary.uploader.destroy(filename)
     }
     await campground.updateOne({
-      $pull: {
-        images: {
-          filename: {
-            $in: req.body.deleteImages,
-          },
-        },
-      },
+      $pull: { images: { filename: { $in: req.body.deleteImages } } },
     })
   }
+
+  const newImages = req.files.map((f) => ({
+    url: f.path,
+    filename: f.filename,
+  }))
+  campground.images.push(...newImages)
 
   await campground.save()
 

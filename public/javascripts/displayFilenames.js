@@ -1,7 +1,12 @@
-document.getElementById("images").addEventListener("change", function (e) {
-  const files = Array.from(e.target.files)
-  const names = files.map((f) => f.name).join(", ")
-  document.getElementById("file-names").textContent = files.length
-    ? `${files.length} files selected: ${names}`
-    : ""
-})
+;(function () {
+  const input = document.getElementById("images")
+  if (!input) return
+
+  input.addEventListener("change", function () {
+    const names = Array.from(this.files)
+      .map((f) => f.name)
+      .join(", ")
+    const display = document.getElementById("filename")
+    if (display) display.textContent = names
+  })
+})()
