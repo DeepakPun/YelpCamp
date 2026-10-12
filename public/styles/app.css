@@ -1,0 +1,14 @@
+#cluster-map {
+  width: 100%;
+  height: 500px;
+}
+
+#map {
+  width: 100%;
+  height: 300px;
+}
+
+#cluster-map,
+#map {
+  border-radius: 7px;
+}

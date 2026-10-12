@@ -21,8 +21,8 @@ router
   .get(getAllCampgrounds)
   .post(
     isLoggedIn,
-    validateCampground,
     upload.array("images"),
+    validateCampground,
     createCampground,
   )
 

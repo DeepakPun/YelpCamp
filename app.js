@@ -1,4 +1,6 @@
 import "./env.js"
+// import "./utils/mongoSanitizeV5.js"
+import { sanitizeV5 } from "./utils/mongoSanitizeV5.js"
 import express from "express"
 import path from "path"
 import { fileURLToPath } from "url"
@@ -15,16 +17,40 @@ import flash from "connect-flash"
 import passport from "passport"
 import LocalStrategy from "passport-local"
 import User from "./models/user.js"
+import helmet from "helmet"
+import { MongoStore } from "connect-mongo"
 
-mongoose.connect("mongodb://localhost:27017/yelp-camp")
+const dbUrl = process.env.MONGO_URI || "mongodb://localhost:27017/yelp-camp"
+
+const store = MongoStore.create({
+  mongoUrl: dbUrl,
+  touchAfter: 24 * 60 * 60,
+  crypto: {
+    secret: process.env.SESSION_SECRET,
+  },
+})
+
+mongoose.connect(dbUrl)
 
 const db = mongoose.connection
-db.on("error", console.error.bind(console, "connection error:"))
+db.on("error", (err) => {
+  console.error(
+    `\x1b[31m[❌ DB ERROR] [${new Date().toLocaleTimeString()}] Connection failed:\x1b[0m`,
+    err.message,
+  )
+})
+
 db.once("open", () => {
-  console.log("Database connected")
+  const { host, name } = mongoose.connection
+  console.log(
+    `\x1b[32m[🚀 DB SUCCESS] [${new Date().toLocaleTimeString()}] Connected to Mongo successfully!\x1b[0m`,
+  )
+  console.log(`   ├─ Host: ${host}`)
+  console.log(`   └─ Database: ${name}`)
 })
 
 const app = express()
+app.set("query parser", "extended")
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -35,13 +61,19 @@ app.use(express.urlencoded({ extended: true }))
 app.use(express.json())
 app.use(methodOverride("_method"))
 app.use(express.static(path.join(__dirname, "public")))
+app.use(sanitizeV5({ replaceWith: "_" }))
+
+store.on("error", (e) => console.log("SESSION STORE ERROR.", e.messsage))
 
 const sessionConfig = {
+  store,
+  name: "YelpCamp-User-Session",
   secret: process.env.SESSION_SECRET,
   resave: false,
   saveUninitialized: false,
   cookie: {
     httpOnly: true,
+    // secure: true,    // Only works on https
     expires: Date.now() + 1000 * 60 * 60 * 24 * 7,
     maxAge: 1000 * 60 * 60 * 24 * 7,
   },
@@ -49,6 +81,57 @@ const sessionConfig = {
 
 app.use(session(sessionConfig))
 app.use(flash())
+const scriptSrcUrls = [
+  "https://stackpath.bootstrapcdn.com/",
+  // "https://api.tiles.mapbox.com/",
+  // "https://api.mapbox.com/",
+  "https://kit.fontawesome.com/",
+  "https://cdnjs.cloudflare.com/",
+  "https://cdn.jsdelivr.net",
+  "https://cdn.maptiler.com/",
+]
+const styleSrcUrls = [
+  "https://kit-free.fontawesome.com/",
+  "https://stackpath.bootstrapcdn.com/",
+  // "https://api.mapbox.com/",
+  // "https://api.tiles.mapbox.com/",
+  "https://fonts.googleapis.com/",
+  "https://use.fontawesome.com/",
+  "https://cdn.jsdelivr.net",
+  "https://cdn.maptiler.com/",
+]
+const connectSrcUrls = [
+  // "https://api.mapbox.com/",
+  // "https://a.tiles.mapbox.com/",
+  // "https://b.tiles.mapbox.com/",
+  // "https://events.mapbox.com/",
+  "https://api.maptiler.com/",
+  "https://cdn.maptiler.com",
+  "https://cdn.jsdelivr.net",
+]
+// imgSrc: (["https://api.maptiler.com/"],
+const fontSrcUrls = ["https://cdn.jsdelivr.net"]
+app.use(
+  helmet.contentSecurityPolicy({
+    directives: {
+      defaultSrc: [],
+      connectSrc: ["'self'", ...connectSrcUrls],
+      scriptSrc: ["'unsafe-inline'", "'self'", ...scriptSrcUrls],
+      styleSrc: ["'self'", "'unsafe-inline'", ...styleSrcUrls],
+      workerSrc: ["'self'", "blob:"],
+      objectSrc: [],
+      imgSrc: [
+        "'self'",
+        "blob:",
+        "data:",
+        `https://res.cloudinary.com/${process.env.CLOUDINARY_CLOUD_NAME}/`,
+        "https://images.unsplash.com/",
+        "https://api.maptiler.com/",
+      ],
+      fontSrc: ["'self'", ...fontSrcUrls],
+    },
+  }),
+)
 
 app.use((req, res, next) => {
   if (req.url.includes(".well-known")) {
@@ -66,6 +149,7 @@ passport.serializeUser(User.serializeUser())
 passport.deserializeUser(User.deserializeUser())
 
 app.use((req, res, next) => {
+  // console.log("req.query:", req.query)
   res.locals.currentUser = req.user
   res.locals.success = req.flash("success")
   res.locals.error = req.flash("error")
