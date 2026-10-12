@@ -112,7 +112,7 @@ const connectSrcUrls = [
   "https://cdn.jsdelivr.net",
 ]
 // imgSrc: (["https://api.maptiler.com/"],
-const fontSrcUrls = ["https://cdn.jsdelivr.net"]
+const fontSrcUrls = ["https://fonts.gstatic.com", "https://cdn.jsdelivr.net"]
 app.use(
   helmet.contentSecurityPolicy({
     directives: {

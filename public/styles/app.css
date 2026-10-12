@@ -6,6 +6,21 @@ body {
       #ffffff 100%);
   background-attachment: fixed;
   min-height: 100vh;
+  font-family: "Outfit", sans-serif;
+}
+
+h1,
+h2,
+h3,
+.navbar-brand {
+  font-family: "Outfit", sans-serif;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+p,
+.card-text {
+  font-family: "Lora", serif;
 }
 
 /* .home-hero {
