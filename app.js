@@ -51,6 +51,7 @@ db.once("open", () => {
 
 const app = express()
 app.set("query parser", "extended")
+app.set("trust proxy", 1)
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -73,8 +74,9 @@ const sessionConfig = {
   saveUninitialized: false,
   cookie: {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    expires: Date.now() + 1000 * 60 * 60 * 24 * 7,
+    secure: process.env.NODE_ENV === "production" && process.env.RENDER,
+    sameSite: "lax",
+    // expires: Date.now() + 1000 * 60 * 60 * 24 * 7,
     maxAge: 1000 * 60 * 60 * 24 * 7,
   },
 }
