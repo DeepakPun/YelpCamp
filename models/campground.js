@@ -44,6 +44,9 @@ const campgroundSchema = new Schema(
     ],
   },
   opts,
+  {
+    timestamps: true,
+  },
 )
 
 campgroundSchema.virtual("properties.popUpMarkup").get(function () {

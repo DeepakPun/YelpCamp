@@ -17,6 +17,12 @@
 </head>
 
 <body class="d-flex flex-column vh-100">
+<div class="alert alert-warning alert-dismissible fade show text-center mb-0 rounded-0" role="alert" style="font-size: 0.9rem;">
+  <i class="bi bi-exclamation-triangle-fill me-1"></i>
+  <strong>Sandbox Demo:</strong> This is a public sandbox. Data is not retained long-term —
+  max 50 campgrounds, 20 reviews/campground, 100 users. Oldest entries are auto-deleted.
+  <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+</div>
     <%- include('../partials/navbar') %>
         <main class="container mt-3">
             <%- include('../partials/flash') %>

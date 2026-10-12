@@ -1,3 +1,19 @@
+body {
+  background: linear-gradient(180deg,
+      #d4e9d2 0%,
+      #e8f5e9 25%,
+      #f8f9fa 45%,
+      #ffffff 100%);
+  background-attachment: fixed;
+  min-height: 100vh;
+}
+
+/* .home-hero {
+  background-image:
+    linear-gradient(180deg, rgba(0, 0, 0, 0.4) 0%, rgba(255, 255, 255, 0.9) 85%, #ffffff 100%),
+    url('your-image.jpg') !important;
+} */
+
 #cluster-map {
   width: 100%;
   height: 500px;

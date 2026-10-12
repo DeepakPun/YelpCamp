@@ -1,14 +1,15 @@
 import Campground from "../models/campground.js"
 import { cloudinary } from "../cloudinary/index.js"
 import * as maptilerClient from "@maptiler/client"
+import Review from "../models/review.js"
 
 maptilerClient.config.apiKey = process.env.MAPTILER_API_KEY
 maptilerClient.config.fetch = fetch
 
-async function findCoordinates() {
-  const geoData = await maptilerClient.geocoding.forward("Los Angeles")
-  console.log("Coordinates: ", geoData.features[0].geometry.coordinates)
-}
+// async function findCoordinates() {
+//   const geoData = await maptilerClient.geocoding.forward("Los Angeles")
+//   console.log("Coordinates: ", geoData.features[0].geometry.coordinates)
+// }
 
 const getAllCampgrounds = async (req, res) => {
   const campgrounds = await Campground.find({})
@@ -44,8 +45,6 @@ const createCampground = async (req, res) => {
     autocomplete: false,
   })
 
-  console.log("GeoData:", geoData.features[0])
-
   if (!geoData.features?.length) {
     req.flash("error", "Could not geocode that location. Please try again.")
     return res.redirect("/campgrounds/new")
@@ -68,9 +67,29 @@ const createCampground = async (req, res) => {
     url: f.path,
     filename: f.filename,
   }))
+
   campground.author = req.user._id
   await campground.save()
-  console.log(campground)
+  
+  const MAX_CAMPGROUNDS = 5
+  const count = await Campground.countDocuments()
+  if (count > MAX_CAMPGROUNDS) {
+    const overflow = count - MAX_CAMPGROUNDS
+    const oldest = await Campground.find()
+      .sort({ createdAt: 1 })
+      .limit(overflow)
+
+    for (let camp of oldest) {
+      for (let img of camp.images) {
+        await cloudinary.uploader.destroy(img.filename)
+      }
+
+      await Review.deleteMany({ _id: { $in: camp.reviews } })
+      await Campground.findByIdAndDelete(camp._id)
+    }
+    console.log(`Demo cap: deleted ${overflow} oldest campground(s)`)
+  }
+
   req.flash("success", "Successfully made a new campground!")
   res.redirect(`/campgrounds/${campground._id}`)
 }
