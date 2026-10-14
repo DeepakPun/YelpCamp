@@ -18,4 +18,3 @@
     )
   })
 })()
-// console.log("validateForms.js loaded successfully")

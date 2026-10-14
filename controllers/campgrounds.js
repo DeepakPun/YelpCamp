@@ -87,7 +87,7 @@ const createCampground = async (req, res) => {
       await Review.deleteMany({ _id: { $in: camp.reviews } })
       await Campground.findByIdAndDelete(camp._id)
     }
-    console.log(`Demo cap: deleted ${overflow} oldest campground(s)`)
+    // console.log(`Demo cap: deleted ${overflow} oldest campground(s)`)
   }
 
   req.flash("success", "Successfully made a new campground!")

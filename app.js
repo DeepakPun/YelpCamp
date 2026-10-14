@@ -50,6 +50,13 @@ db.once("open", () => {
 })
 
 const app = express()
+// ==========================================
+// 🚀 RENDER KEEP-ALIVE HEALTH CHECK
+// ==========================================
+app.get("/health", (req, res) => {
+  res.status(200).send("OK")
+})
+// ==========================================
 app.set("query parser", "extended")
 app.set("trust proxy", 1)
 

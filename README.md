@@ -33,14 +33,14 @@ A full-stack campground review app built as part of Colt Steele's Web Developer 
 #### 1. Clone & Install
 
 ```bash
-git clone https://github.com/yourusername/yelpcamp.git
+git clone https://github.com/DeepakPun/YelpCamp.git
 cd yelpcamp
 npm install
 ```
 
 #### 2. Environment Variables
 
-Create a `.env` file in root:
+Create a `.env.local` file in root:
 
 ```env
 DB_URL=mongodb+srv://<user>:<pass>@cluster.mongodb.net/yelpcamp?retryWrites=true&w=majority
