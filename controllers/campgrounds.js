@@ -1,5 +1,5 @@
 import Campground from "../models/campground.js"
-import { cloudinary } from "../cloudinary/index.js"
+import { cloudinary, uploadToCloudinary } from "../cloudinary/index.js"
 import * as maptilerClient from "@maptiler/client"
 import Review from "../models/review.js"
 
@@ -63,14 +63,22 @@ const createCampground = async (req, res) => {
   const campground = new Campground(req.body.campground)
   campground.geometry = feature.geometry
   campground.location = feature.place_name
-  campground.images = req.files.map((f) => ({
-    url: f.path,
-    filename: f.filename,
-  }))
+
+  if (req.files?.length) {
+    const uploaded = await Promise.all(
+      req.files.map((file) => uploadToCloudinary(file.buffer)),
+    )
+    campground.images = uploaded.map((f) => ({
+      url: f.secure_url,
+      filename: f.public_id,
+    }))
+  } else {
+    campground.images = []
+  }
 
   campground.author = req.user._id
   await campground.save()
-  
+
   const MAX_CAMPGROUNDS = 5
   const count = await Campground.countDocuments()
   if (count > MAX_CAMPGROUNDS) {
@@ -81,13 +89,14 @@ const createCampground = async (req, res) => {
 
     for (let camp of oldest) {
       for (let img of camp.images) {
-        await cloudinary.uploader.destroy(img.filename)
+        if (img.filename) {
+          await cloudinary.uploader.destroy(img.filename)
+        }
       }
 
       await Review.deleteMany({ _id: { $in: camp.reviews } })
       await Campground.findByIdAndDelete(camp._id)
     }
-    // console.log(`Demo cap: deleted ${overflow} oldest campground(s)`)
   }
 
   req.flash("success", "Successfully made a new campground!")
@@ -140,28 +149,37 @@ const updateCampground = async (req, res) => {
     geometry: campground.geometry,
   })
 
+  const deleteImages = req.body.deleteImages
+    ? [].concat(req.body.deleteImages)
+    : []
+
   const hasNewImages = req.files && req.files.length > 0
-  const deleteCount = req.body.deleteImages?.length || 0
+  const deleteCount = deleteImages.length
 
   if (deleteCount === campground.images.length && !hasNewImages) {
     req.flash("error", "You cannot delete all images, must have at least one")
     return res.redirect(`/campgrounds/${campground._id}/edit`)
   }
 
-  if (req.body.deleteImages) {
-    for (let filename of req.body.deleteImages) {
+  if (deleteCount > 0) {
+    for (let filename of deleteImages) {
       await cloudinary.uploader.destroy(filename)
     }
     await campground.updateOne({
-      $pull: { images: { filename: { $in: req.body.deleteImages } } },
+      $pull: { images: { filename: { $in: deleteImages } } },
     })
   }
 
-  const newImages = req.files.map((f) => ({
-    url: f.path,
-    filename: f.filename,
-  }))
-  campground.images.push(...newImages)
+  if (hasNewImages) {
+    const uploaded = await Promise.all(
+      req.files.map((file) => uploadToCloudinary(file.buffer)),
+    )
+    const newImages = uploaded.map((f) => ({
+      url: f.secure_url,
+      filename: f.public_id,
+    }))
+    campground.images.push(...newImages)
+  }
 
   await campground.save()
 

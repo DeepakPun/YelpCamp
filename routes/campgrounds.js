@@ -1,8 +1,8 @@
 import express from "express"
 import { isLoggedIn, isAuthor, validateCampground } from "../middleware.js"
-import multer from "multer"
-import { storage } from "../cloudinary/index.js"
-const upload = multer({ storage })
+// import multer from "multer"
+import { upload } from "../cloudinary/index.js"
+// const upload = multer({ storage })
 
 import {
   createCampground,
