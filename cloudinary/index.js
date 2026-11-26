@@ -1,10 +1,5 @@
 import { v2 as cloudinary } from "cloudinary"
-import { CloudinaryStorage } from "multer-storage-cloudinary"
-// console.log(
-//   "ENV CHECK:",
-//   process.env.CLOUDINARY_CLOUD_NAME,
-//   process.env.CLOUDINARY_KEY ? "key exists" : "KEY MISSING",
-// )
+import multer from "multer"
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -12,12 +7,31 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_SECRET,
 })
 
-const storage = new CloudinaryStorage({
-  cloudinary,
-  params: {
-    folder: "YelpCamp",
-    allowedFormats: ["jpg", "png", "jpeg"],
+const upload = multer({
+  storage: multer.memoryStorage(),
+  fileFilter: (req, file, cb) => {
+    if (["image/jpeg", "image/png", "image/jpg"].includes(file.mimetype)) {
+      cb(null, true)
+    } else {
+      cb(new Error("Only jpg, png, jpeg allowed"))
+    }
   },
 })
 
-export { cloudinary, storage }
+function uploadToCloudinary(buffer, folder = "YelpCamp") {
+  return new Promise((resolve, reject) => {
+    const stream = cloudinary.uploader.upload_stream(
+      { folder, resource_type: "auto" },
+      (error, result) => (error ? reject(error) : resolve(result)),
+    )
+    stream.end(buffer)
+  })
+}
+
+export { cloudinary, upload, uploadToCloudinary }
+
+// console.log(
+//   "ENV CHECK:",
+//   process.env.CLOUDINARY_CLOUD_NAME,
+//   process.env.CLOUDINARY_KEY ? "key exists" : "KEY MISSING",
+// )
